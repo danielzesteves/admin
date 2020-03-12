@@ -39,14 +39,36 @@
               <v-card-text>
                 <v-container>
                   <v-row>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="form.ip" label="IP"></v-text-field>
+                    <v-col cols="12" sm="6" md="6">
+                      <v-text-field 
+                          v-model="form.ip" 
+                          label="IP" 
+                          v-validate="'required|ip'"
+                          :error="errors.has('ip')"
+                          name="ip"
+                          :error-messages="errors.first('ip')"
+                          ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="form.host" label="Host"></v-text-field>
+                    <v-col cols="12" sm="6" md="6">
+                      <v-text-field 
+                      v-model="form.host" 
+                      label="Host"
+                           v-validate="'required'"
+                          :error="errors.has('host')"
+                          name="host"
+                          :error-messages="errors.first('host')"                      
+                      ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="form.descripcion" label="Descripción"></v-text-field>
+                    <v-col cols="12" sm="6" md="12">
+                      <v-text-field 
+                        v-model="form.descripcion" 
+                        label="Descripción"
+                        v-validate="'required|max:200'"
+                        :error="errors.has('descripcion')"
+                        name="descripcion"
+                        :error-messages="errors.first('descripcion')"
+                        counter
+                        ></v-text-field>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -111,8 +133,14 @@ export default {
       this.dialog = false;
     },
     guardar() {
-      this.dialog = false;
-      console.log(JSON.parse(JSON.stringify(this.form)));
+      this.$validator.validateAll().then(result => {
+        if (result) {
+          console.log(JSON.parse(JSON.stringify(this.form)));
+           this.dialog = false;
+        }
+      });      
+     
+      
     },
     async getServidores() {
       let res = await axios.get("http://localhost/api/servidores");
