@@ -1,9 +1,30 @@
 <template>
   <v-container>
     <v-data-table :headers="headers" :items="items" sort-by="calories" class="elevation-1">
+      <template v-slot:body="{ items }">
+        <tbody>
+          <tr v-for="item in items" :key="item.name">
+            <td>
+                <v-icon small class="handle">mdi-arrow-split-horizontal</v-icon>
+            </td>
+            <td>{{ item.id }}</td>
+            <td>{{ item.ip }}</td>
+            <td>{{ item.host }}</td>
+            <td>{{ item.descripcion }}</td>
+            <td>
+              <v-btn icon color="blue">
+                <v-icon small>mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn icon color="red">
+                <v-icon small>mdi-delete</v-icon>
+              </v-btn>
+            </td>
+          </tr>
+        </tbody>
+      </template>
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>My CRUD</v-toolbar-title>
+          <v-toolbar-title>Servidores</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" max-width="500px">
@@ -27,12 +48,6 @@
                     <v-col cols="12" sm="6" md="4">
                       <v-text-field v-model="toEdit.fat" label="Fat (g)"></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="toEdit.carbs" label="Carbs (g)"></v-text-field>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="toEdit.protein" label="Protein (g)"></v-text-field>
-                    </v-col>
                   </v-row>
                 </v-container>
               </v-card-text>
@@ -46,6 +61,7 @@
           </v-dialog>
         </v-toolbar>
       </template>
+
       <template v-slot:item.actions="{ item }">
         <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
         <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
@@ -56,6 +72,7 @@
 
 <script>
 import axios from "axios";
+import Sortable from "sortablejs";
 export default {
   name: "HelloWorld",
 
@@ -63,21 +80,32 @@ export default {
     dialog: false,
     headers: [
       {
+        text: "Ordenar",
+        align: "center",
+        sortable: false
+      },
+      {
         text: "ID",
         align: "center",
-        sortable: false,
+        sortable: true,
         value: "id"
       },
-      { text: "IP", value: "ip", align: "center" },
-      { text: "Host", value: "host", align: "center" },
-      { text: "Descripcion", value: "descripcion", align: "center" },
-      { text: 'Acciones', value: 'actions', sortable: false }
+      { text: "IP", value: "ip", align: "center", sortable: false },
+      { text: "Host", value: "host", align: "center", sortable: false },
+      {
+        text: "Descripcion",
+        value: "descripcion",
+        align: "center",
+        sortable: false
+      },
+      { text: "Acciones", value: "actions", sortable: false }
     ],
     items: [],
     toEdit: {}
   }),
-  mounted(){
+  mounted() {
     this.getServidores();
+    
   },
   methods: {
     close() {
@@ -90,6 +118,19 @@ export default {
       let res = await axios.get("http://localhost/api/servidores");
       console.log(JSON.parse(JSON.stringify(res)));
       this.items = res.data;
+      this.setSortable();
+
+    },
+    setSortable() {
+      let table = document.querySelector(".v-data-table tbody");
+      const _self = this;
+      Sortable.create(table,{
+        handle:".handle",
+        onEnd({newIndex,oldIndex}){
+          const rowSelected = _self.items.splice(oldIndex,1)[0];
+          _self.items.splice(newIndex,0,rowSelected);
+      }
+      });
     }
   }
 };
