@@ -5,7 +5,7 @@
         <tbody>
           <tr v-for="item in items" :key="item.name">
             <td>
-                <v-icon small class="handle">mdi-arrow-split-horizontal</v-icon>
+              <v-icon small class="handle">mdi-arrow-split-horizontal</v-icon>
             </td>
             <td>{{ item.id }}</td>
             <td>{{ item.ip }}</td>
@@ -29,7 +29,9 @@
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" max-width="500px">
             <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on" fab small><v-icon small >mdi-plus</v-icon></v-btn>
+              <v-btn color="primary" dark class="mb-2" v-on="on" fab small>
+                <v-icon small>mdi-plus</v-icon>
+              </v-btn>
             </template>
             <v-card>
               <v-card-title>
@@ -40,35 +42,35 @@
                 <v-container>
                   <v-row>
                     <v-col cols="12" sm="6" md="6">
-                      <v-text-field 
-                          v-model="form.ip" 
-                          label="IP" 
-                          v-validate="'required|ip'"
-                          :error="errors.has('ip')"
-                          name="ip"
-                          :error-messages="errors.first('ip')"
-                          ></v-text-field>
+                      <v-text-field
+                        v-model="form.ip"
+                        label="IP"
+                        v-validate="'required|ip'"
+                        :error="errors.has('ip')"
+                        name="ip"
+                        :error-messages="errors.first('ip')"
+                      ></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6" md="6">
-                      <v-text-field 
-                      v-model="form.host" 
-                      label="Host"
-                           v-validate="'required'"
-                          :error="errors.has('host')"
-                          name="host"
-                          :error-messages="errors.first('host')"                      
+                      <v-text-field
+                        v-model="form.host"
+                        label="Host"
+                        v-validate="'required'"
+                        :error="errors.has('host')"
+                        name="host"
+                        :error-messages="errors.first('host')"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6" md="12">
-                      <v-text-field 
-                        v-model="form.descripcion" 
+                      <v-text-field
+                        v-model="form.descripcion"
                         label="Descripción"
                         v-validate="'required|max:200'"
                         :error="errors.has('descripcion')"
                         name="descripcion"
                         :error-messages="errors.first('descripcion')"
                         counter
-                        ></v-text-field>
+                      ></v-text-field>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -76,7 +78,7 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="close">Cerrar</v-btn>
-                <v-btn color="blue darken-1" text @click="guardar">Guardar</v-btn>
+                <v-btn color="blue darken-1" text @click="validar">Guardar</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -126,39 +128,41 @@ export default {
   }),
   mounted() {
     this.getServidores();
-    
   },
   methods: {
     close() {
       this.dialog = false;
     },
-    guardar() {
+    validar() {
       this.$validator.validateAll().then(result => {
         if (result) {
           console.log(JSON.parse(JSON.stringify(this.form)));
-           this.dialog = false;
+          this.guardar(this.form);
         }
-      });      
-     
-      
+      });
     },
     async getServidores() {
       let res = await axios.get("http://localhost/api/servidores");
       console.log(JSON.parse(JSON.stringify(res)));
       this.items = res.data;
       this.setSortable();
-
     },
     setSortable() {
       let table = document.querySelector(".v-data-table tbody");
       const _self = this;
-      Sortable.create(table,{
-        handle:".handle",
-        onEnd({newIndex,oldIndex}){
-          const rowSelected = _self.items.splice(oldIndex,1)[0];
-          _self.items.splice(newIndex,0,rowSelected);
-      }
+      Sortable.create(table, {
+        handle: ".handle",
+        onEnd({ newIndex, oldIndex }) {
+          const rowSelected = _self.items.splice(oldIndex, 1)[0];
+          _self.items.splice(newIndex, 0, rowSelected);
+        }
       });
+    },
+    async guardar(form) {
+        const header = {headers: {"Accept":"application/json","Content-Type":"application/json","Access-Control-Allow-Origin":"*"}};
+        const rs = await axios.post("http://localhost/api/servidores", form,header);
+        console.log(rs);
+        this.dialog = false;
     }
   }
 };
