@@ -29,33 +29,32 @@
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" max-width="500px">
             <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on">New Item</v-btn>
+              <v-btn color="primary" dark class="mb-2" v-on="on" fab small><v-icon small >mdi-plus</v-icon></v-btn>
             </template>
             <v-card>
               <v-card-title>
-                <span class="headline">HEADLINE</span>
+                <span class="headline">Servidor</span>
               </v-card-title>
 
               <v-card-text>
                 <v-container>
                   <v-row>
                     <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="toEdit.name" label="Dessert name"></v-text-field>
+                      <v-text-field v-model="form.ip" label="IP"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="toEdit.calories" label="Calories"></v-text-field>
+                      <v-text-field v-model="form.host" label="Host"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6" md="4">
-                      <v-text-field v-model="toEdit.fat" label="Fat (g)"></v-text-field>
+                      <v-text-field v-model="form.descripcion" label="Descripción"></v-text-field>
                     </v-col>
                   </v-row>
                 </v-container>
               </v-card-text>
-
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="guardar">Save</v-btn>
+                <v-btn color="blue darken-1" text @click="close">Cerrar</v-btn>
+                <v-btn color="blue darken-1" text @click="guardar">Guardar</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -101,7 +100,7 @@ export default {
       { text: "Acciones", value: "actions", sortable: false }
     ],
     items: [],
-    toEdit: {}
+    form: {}
   }),
   mounted() {
     this.getServidores();
@@ -113,6 +112,7 @@ export default {
     },
     guardar() {
       this.dialog = false;
+      console.log(JSON.parse(JSON.stringify(this.form)));
     },
     async getServidores() {
       let res = await axios.get("http://localhost/api/servidores");
