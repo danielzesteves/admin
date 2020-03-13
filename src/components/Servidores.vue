@@ -12,19 +12,18 @@
             <td>{{ item.host }}</td>
             <td>{{ item.descripcion }}</td>
             <td>
-              <v-btn icon color="blue">
-                <v-icon small>mdi-pencil</v-icon>
-              </v-btn>
-              <v-btn icon color="red">
-                <v-icon small>mdi-delete</v-icon>
-              </v-btn>
+              <a :href="item.img" target="_blank">Ver</a>
+            </td>
+            <td>
+              <v-icon small>mdi-pencil</v-icon>
+              <v-icon small @click="borrar(item.id)" color="red">mdi-delete</v-icon>
             </td>
           </tr>
         </tbody>
       </template>
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>Servidores</v-toolbar-title>
+          <v-toolbar-title>{{cantidad}} servidores</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" max-width="500px">
@@ -73,20 +72,18 @@
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="12" md="12">
-                      <input 
-                        type="file" 
+                      <input
+                        type="file"
                         id="files"
                         ref="files"
                         @change="handleFilesUpload"
                         v-validate="'required|ext:jpeg,jpg,png,gif'"
                         name="files"
                         data-vv-as="archivo"
-                        />
+                      />
                     </v-col>
                     <v-col cols="12" sm="12" md="12">
-                      <span v-if="errors.has('files')">
-                          {{errors.first('files')}}
-                      </span>
+                      <span v-if="errors.has('files')">{{errors.first('files')}}</span>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -106,6 +103,22 @@
         <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
       </template>
     </v-data-table>
+    <v-snackbar v-model="alertSnack.visible" :top="true" :color="alertSnack.color" dense>
+      {{ alertSnack.text }}
+      <v-btn text @click="alertSnack.visible = false">Cerrar</v-btn>
+    </v-snackbar>
+    <v-dialog v-model="confirmar" max-width="480">
+      <v-card>
+        <v-card-title class="headline">¿Realmente desea borrar el servidor?</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn color="green darken-1" text @click="confirmar = false">Cancelar</v-btn>
+
+          <v-btn color="green darken-1" text @click="doBorrar">Confirmar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -116,6 +129,7 @@ export default {
   name: "HelloWorld",
 
   data: () => ({
+    confirmar:false,
     dialog: false,
     headers: [
       {
@@ -137,10 +151,18 @@ export default {
         align: "center",
         sortable: false
       },
+      {
+        text: "Imagen",
+        value: "img",
+        align: "center",
+        sortable: false
+      },
       { text: "Acciones", value: "actions", sortable: false }
     ],
     items: [],
-    form: {}
+    form: {},
+    alertSnack: { visible: false, mensaje: null, color: null },
+    idBorrar: null
   }),
   mounted() {
     this.getServidores();
@@ -158,7 +180,6 @@ export default {
     },
     async getServidores() {
       let res = await axios.get("http://localhost/api/servidores");
-      console.log(JSON.parse(JSON.stringify(res)));
       this.items = res.data;
       this.setSortable();
     },
@@ -174,21 +195,85 @@ export default {
       });
     },
     async guardar() {
-        console.log(this.form.file);
-        let formData = new FormData();
-        formData.append('file', this.form.file);
-        formData.append('ip', this.form.ip);
-        formData.append('host', this.form.host);
-        formData.append('descripcion', this.form.descripcion);
-        const header = {headers: {"Accept":"application/json","Access-Control-Allow-Origin":"*",'Content-Type': 'multipart/form-data'}};
-        const rs = await axios.post("http://localhost/api/servidores", formData,header);
+      let formData = new FormData();
+      formData.append("file", this.form.file);
+      formData.append("ip", this.form.ip);
+      formData.append("host", this.form.host);
+      formData.append("descripcion", this.form.descripcion);
+      const header = {
+        headers: {
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "multipart/form-data"
+        }
+      };
+      let rs = null;
+      try {
+        rs = await axios.post(
+          "http://localhost/api/servidores",
+          formData,
+          header
+        );
         console.log(rs);
         this.items = rs.data;
+      } catch (error) {
+        rs = { status: 500 };
+      }
+
+      if (rs.status === 200) {
+        this.setAlert("success", "Servidor creado", true);
+        this.dialog = false;
+      }
+      if (rs.status != 200) {
+        this.setAlert("error", "Ocurrio un error al crear el servidor", true);
+      }
     },
-    handleFilesUpload(){
-      
-    this.form.file = this.$refs.files.files[0];
-  }
+    handleFilesUpload() {
+      this.form.file = this.$refs.files.files[0];
+    },
+    setAlert(color, text, visible = false) {
+      this.alertSnack = { visible: visible, text: text, color: color };
+    },
+    borrar(id) {
+      this.idBorrar = id;
+      this.confirmar = true;
+    },
+    async doBorrar(){
+    const header = {
+        headers: {
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "multipart/form-data"
+        }
+      };
+      let rs = null;
+      try {
+        rs = await axios.delete(
+          `http://localhost/api/servidores/${this.idBorrar}`,
+          header
+        );
+        this.items = rs.data;
+      } catch (error) {
+        rs = { status: 500 };
+      }
+
+      if (rs.status === 200) {
+        this.setAlert("success", "Servidor borrado", true);
+        this.dialog = false;
+      }
+      if (rs.status != 200) {
+        this.setAlert("error", "Ocurrio un error al borrar el servidor", true);
+      }
+      this.confirmar = false;
+    }
+  },
+  computed: {
+    // a computed getter
+    cantidad: function() {
+      const cantidad = this.items.length;
+      // `this` points to the vm instance
+      return cantidad;
+    }
   }
 };
 </script>
