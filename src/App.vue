@@ -1,11 +1,16 @@
 <template>
   <div id="app">
     <v-app>
-          <router-view/>
+      <Servidores/>
     </v-app>
     </div>
 </template>
-
+<script>
+import Servidores from '@/components/Servidores.vue'
+export default {
+    components:{Servidores}
+}
+</script>
 <style lang="scss">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;

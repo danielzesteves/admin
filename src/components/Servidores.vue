@@ -61,6 +61,9 @@
                         :error-messages="errors.first('host')"
                       ></v-text-field>
                     </v-col>
+                    <v-col cols="12" sm="12" md="12">
+                      <input type="file" id="files" ref="files"  @change="handleFilesUpload"/>
+                    </v-col>
                     <v-col cols="12" sm="6" md="12">
                       <v-text-field
                         v-model="form.descripcion"
@@ -136,8 +139,7 @@ export default {
     validar() {
       this.$validator.validateAll().then(result => {
         if (result) {
-          console.log(JSON.parse(JSON.stringify(this.form)));
-          this.guardar(this.form);
+          this.guardar();
         }
       });
     },
@@ -158,12 +160,22 @@ export default {
         }
       });
     },
-    async guardar(form) {
-        const header = {headers: {"Accept":"application/json","Content-Type":"application/json","Access-Control-Allow-Origin":"*"}};
-        const rs = await axios.post("http://localhost/api/servidores", form,header);
+    async guardar() {
+        console.log(this.form.file);
+        let formData = new FormData();
+        formData.append('file', this.form.file);
+        formData.append('ip', this.form.ip);
+        formData.append('host', this.form.host);
+        formData.append('descripcion', this.form.descripcion);
+        const header = {headers: {"Accept":"application/json","Access-Control-Allow-Origin":"*",'Content-Type': 'multipart/form-data'}};
+        const rs = await axios.post("http://localhost/api/servidores", formData,header);
         console.log(rs);
-        this.dialog = false;
-    }
+        // this.dialog = false;
+    },
+    handleFilesUpload(){
+      
+    this.form.file = this.$refs.files.files[0];
+  }
   }
 };
 </script>
