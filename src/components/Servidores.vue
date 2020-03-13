@@ -183,7 +183,7 @@ export default {
         const header = {headers: {"Accept":"application/json","Access-Control-Allow-Origin":"*",'Content-Type': 'multipart/form-data'}};
         const rs = await axios.post("http://localhost/api/servidores", formData,header);
         console.log(rs);
-        // this.dialog = false;
+        this.items = rs.data;
     },
     handleFilesUpload(){
       
