@@ -1,6 +1,11 @@
 <template>
   <v-container>
-    <v-data-table :headers="headers" :items="items" sort-by="calories" class="elevation-1">
+    <v-data-table
+      :headers="headers"
+      :items="items"
+      sort-by="calories"
+      class="elevation-1"
+    >
       <template v-slot:body="{ items }">
         <tbody>
           <tr v-for="item in items" :key="item.name">
@@ -15,23 +20,23 @@
               <a :href="item.img" target="_blank">Ver</a>
             </td>
             <td>
-              <v-icon small>mdi-pencil</v-icon>
-              <v-icon small @click="borrar(item.id)" color="red">mdi-delete</v-icon>
+              <v-icon small @click="toEdit(item)">mdi-pencil</v-icon>
+              <v-icon small @click="borrar(item.id)" color="red"
+                >mdi-delete</v-icon
+              >
             </td>
           </tr>
         </tbody>
       </template>
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>{{cantidad}} servidores</v-toolbar-title>
+          <v-toolbar-title>{{ cantidad }} servidores</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
+          <v-btn color="primary" dark class="mb-2" fab small @click="toCrear">
+            <v-icon small>mdi-plus</v-icon>
+          </v-btn>
           <v-dialog v-model="dialog" max-width="500px">
-            <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on" fab small>
-                <v-icon small>mdi-plus</v-icon>
-              </v-btn>
-            </template>
             <v-card>
               <v-card-title>
                 <span class="headline">Servidor</span>
@@ -71,7 +76,13 @@
                         counter
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="12" md="12">
+                    <v-col cols="12" sm="12" md="12" v-if="!crear">
+                      <v-switch
+                        v-model="inputFile"
+                        :label="`Cargar imagen:`"
+                      ></v-switch>
+                    </v-col>
+                    <v-col cols="12" sm="12" md="12" v-if="crear || inputFile">
                       <input
                         type="file"
                         id="files"
@@ -82,8 +93,13 @@
                         data-vv-as="archivo"
                       />
                     </v-col>
+                    <v-col cols="12" sm="12" md="12" v-else>
+                      Url: {{ form.img }}
+                    </v-col>
                     <v-col cols="12" sm="12" md="12">
-                      <span v-if="errors.has('files')">{{errors.first('files')}}</span>
+                      <span v-if="errors.has('files')">{{
+                        errors.first("files")
+                      }}</span>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -91,7 +107,9 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="close">Cerrar</v-btn>
-                <v-btn color="blue darken-1" text @click="validar">Guardar</v-btn>
+                <v-btn color="blue darken-1" text @click="validar"
+                  >Guardar</v-btn
+                >
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -103,17 +121,26 @@
         <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
       </template>
     </v-data-table>
-    <v-snackbar v-model="alertSnack.visible" :top="true" :color="alertSnack.color" dense>
+    <v-snackbar
+      v-model="alertSnack.visible"
+      :top="true"
+      :color="alertSnack.color"
+      dense
+    >
       {{ alertSnack.text }}
       <v-btn text @click="alertSnack.visible = false">Cerrar</v-btn>
     </v-snackbar>
     <v-dialog v-model="confirmar" max-width="480">
       <v-card>
-        <v-card-title class="headline">¿Realmente desea borrar el servidor?</v-card-title>
+        <v-card-title class="headline"
+          >¿Realmente desea borrar el servidor?</v-card-title
+        >
         <v-card-actions>
           <v-spacer></v-spacer>
 
-          <v-btn color="green darken-1" text @click="confirmar = false">Cancelar</v-btn>
+          <v-btn color="green darken-1" text @click="confirmar = false"
+            >Cancelar</v-btn
+          >
 
           <v-btn color="green darken-1" text @click="doBorrar">Confirmar</v-btn>
         </v-card-actions>
@@ -129,7 +156,7 @@ export default {
   name: "HelloWorld",
 
   data: () => ({
-    confirmar:false,
+    confirmar: false,
     dialog: false,
     headers: [
       {
@@ -162,7 +189,9 @@ export default {
     items: [],
     form: {},
     alertSnack: { visible: false, mensaje: null, color: null },
-    idBorrar: null
+    idBorrar: null,
+    crear: false,
+    inputFile: true
   }),
   mounted() {
     this.getServidores();
@@ -174,9 +203,15 @@ export default {
     validar() {
       this.$validator.validateAll().then(result => {
         if (result) {
-          this.guardar();
+          this.sentTo();
         }
       });
+    },
+    sentTo() {
+      if (this.crear) {
+        return this.guardar();
+      }
+      this.editar();
     },
     async getServidores() {
       let res = await axios.get("http://localhost/api/servidores");
@@ -238,8 +273,8 @@ export default {
       this.idBorrar = id;
       this.confirmar = true;
     },
-    async doBorrar(){
-    const header = {
+    async doBorrar() {
+      const header = {
         headers: {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
@@ -265,6 +300,53 @@ export default {
         this.setAlert("error", "Ocurrio un error al borrar el servidor", true);
       }
       this.confirmar = false;
+    },
+    toEdit(servidor) {
+      this.inputFile = false;
+      this.form = JSON.parse(JSON.stringify(servidor));
+      this.dialog = true;
+      this.crear = false;
+    },
+    async editar() {
+      let formData = new FormData();
+      formData.append("file", this.form.file);
+      formData.append("ip", this.form.ip);
+      formData.append("host", this.form.host);
+      formData.append("descripcion", this.form.descripcion);
+      formData.append("_method", "put");
+      const header = {
+        headers: {
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "multipart/form-data"
+        }
+      };
+      let rs = null;
+      try {
+        rs = await axios.post(
+          `http://localhost/api/servidores/${this.form.id}`,
+          formData,
+          header
+        );
+        console.log(rs);
+        this.items = rs.data;
+      } catch (error) {
+        rs = { status: 500 };
+      }
+
+      if (rs.status === 200) {
+        this.setAlert("success", "Servidor modificado", true);
+        this.dialog = false;
+      }
+      if (rs.status != 200) {
+        this.setAlert("error", "Ocurrio un error al modificar el servidor", true);
+      }
+    },
+    toCrear() {
+      this.form = {};
+      this.inputFile = true;
+      this.dialog = true;
+      this.crear = true;
     }
   },
   computed: {
