@@ -61,9 +61,6 @@
                         :error-messages="errors.first('host')"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="12" md="12">
-                      <input type="file" id="files" ref="files"  @change="handleFilesUpload"/>
-                    </v-col>
                     <v-col cols="12" sm="6" md="12">
                       <v-text-field
                         v-model="form.descripcion"
@@ -74,6 +71,22 @@
                         :error-messages="errors.first('descripcion')"
                         counter
                       ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="12" md="12">
+                      <input 
+                        type="file" 
+                        id="files"
+                        ref="files"
+                        @change="handleFilesUpload"
+                        v-validate="'required|ext:jpeg,jpg,png,gif'"
+                        name="files"
+                        data-vv-as="archivo"
+                        />
+                    </v-col>
+                    <v-col cols="12" sm="12" md="12">
+                      <span v-if="errors.has('files')">
+                          {{errors.first('files')}}
+                      </span>
                     </v-col>
                   </v-row>
                 </v-container>
