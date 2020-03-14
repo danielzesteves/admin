@@ -1,12 +1,7 @@
 <template>
   <v-container>
     <v-btn depressed small color="primary" class="mb-2" @click="salir">Salir</v-btn>
-    <v-data-table
-      :headers="headers"
-      :items="items"
-      sort-by="calories"
-      class="elevation-1"
-    >
+    <v-data-table :headers="headers" :items="items" sort-by="calories" class="elevation-1">
       <template v-slot:body="{ items }">
         <tbody>
           <tr v-for="item in items" :key="item.name">
@@ -22,9 +17,7 @@
             </td>
             <td>
               <v-icon small @click="toEdit(item)">mdi-pencil</v-icon>
-              <v-icon small @click="borrar(item.id)" color="red"
-                >mdi-delete</v-icon
-              >
+              <v-icon small @click="borrar(item.id)" color="red">mdi-delete</v-icon>
             </td>
           </tr>
         </tbody>
@@ -78,10 +71,7 @@
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="12" md="12" v-if="!crear">
-                      <v-switch
-                        v-model="inputFile"
-                        :label="`Cargar imagen:`"
-                      ></v-switch>
+                      <v-switch v-model="inputFile" :label="`Cargar imagen:`"></v-switch>
                     </v-col>
                     <v-col cols="12" sm="12" md="12" v-if="crear || inputFile">
                       <input
@@ -94,13 +84,13 @@
                         data-vv-as="archivo"
                       />
                     </v-col>
-                    <v-col cols="12" sm="12" md="12" v-else>
-                      Url: {{ form.img }}
-                    </v-col>
+                    <v-col cols="12" sm="12" md="12" v-else>Url: {{ form.img }}</v-col>
                     <v-col cols="12" sm="12" md="12">
-                      <span v-if="errors.has('files')">{{
+                      <span v-if="errors.has('files')">
+                        {{
                         errors.first("files")
-                      }}</span>
+                        }}
+                      </span>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -108,9 +98,7 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="close">Cerrar</v-btn>
-                <v-btn color="blue darken-1" text @click="validar"
-                  >Guardar</v-btn
-                >
+                <v-btn color="blue darken-1" text @click="validar">Guardar</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -122,26 +110,17 @@
         <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
       </template>
     </v-data-table>
-    <v-snackbar
-      v-model="alertSnack.visible"
-      :top="true"
-      :color="alertSnack.color"
-      dense
-    >
+    <v-snackbar v-model="alertSnack.visible" :top="true" :color="alertSnack.color" dense>
       {{ alertSnack.text }}
       <v-btn text @click="alertSnack.visible = false">Cerrar</v-btn>
     </v-snackbar>
     <v-dialog v-model="confirmar" max-width="480">
       <v-card>
-        <v-card-title class="headline"
-          >¿Realmente desea borrar el servidor?</v-card-title
-        >
+        <v-card-title class="headline">¿Realmente desea borrar el servidor?</v-card-title>
         <v-card-actions>
           <v-spacer></v-spacer>
 
-          <v-btn color="green darken-1" text @click="confirmar = false"
-            >Cancelar</v-btn
-          >
+          <v-btn color="green darken-1" text @click="confirmar = false">Cancelar</v-btn>
 
           <v-btn color="green darken-1" text @click="doBorrar">Confirmar</v-btn>
         </v-card-actions>
@@ -192,9 +171,11 @@ export default {
     alertSnack: { visible: false, mensaje: null, color: null },
     idBorrar: null,
     crear: false,
-    inputFile: true
+    inputFile: true,
+    token: null
   }),
   mounted() {
+    this.token = localStorage.token;
     this.getServidores();
   },
   methods: {
@@ -215,7 +196,15 @@ export default {
       this.editar();
     },
     async getServidores() {
-      let res = await axios.get("http://localhost/api/servidores");
+      const header = {
+        headers: {
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${this.token}`
+        }
+      };
+      let res = await axios.get("http://localhost/api/servidores",header);
       this.items = res.data;
       this.setSortable();
     },
@@ -240,7 +229,8 @@ export default {
         headers: {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
-          "Content-Type": "multipart/form-data"
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${this.token}`
         }
       };
       let rs = null;
@@ -279,7 +269,8 @@ export default {
         headers: {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
-          "Content-Type": "multipart/form-data"
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${this.token}`
         }
       };
       let rs = null;
@@ -319,7 +310,8 @@ export default {
         headers: {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
-          "Content-Type": "multipart/form-data"
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${this.token}`
         }
       };
       let rs = null;
@@ -340,7 +332,11 @@ export default {
         this.dialog = false;
       }
       if (rs.status != 200) {
-        this.setAlert("error", "Ocurrio un error al modificar el servidor", true);
+        this.setAlert(
+          "error",
+          "Ocurrio un error al modificar el servidor",
+          true
+        );
       }
     },
     toCrear() {
@@ -349,9 +345,9 @@ export default {
       this.dialog = true;
       this.crear = true;
     },
-    salir(){
+    salir() {
       localStorage.removeItem("token");
-      this.$router.push({ name: 'Login' })
+      this.$router.push({ name: "Login" });
     }
   },
   computed: {
