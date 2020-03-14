@@ -196,17 +196,22 @@ export default {
       this.editar();
     },
     async getServidores() {
-      const header = {
-        headers: {
-          Accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${this.token}`
-        }
-      };
-      let res = await axios.get("http://localhost/api/servidores",header);
-      this.items = res.data;
-      this.setSortable();
+      let res = {};
+      try {
+        const header = {
+          headers: {
+            Accept: "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${this.token}`
+          }
+        };
+        res = await axios.get("http://localhost/api/servidores", header);
+        this.items = res.data;
+        this.setSortable();
+      } catch (error) {
+        this.manaageError(error);
+      }
     },
     setSortable() {
       let table = document.querySelector(".v-data-table tbody");
@@ -230,7 +235,7 @@ export default {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${this.token}`
+          Authorization: `Bearer ${this.token}`
         }
       };
       let rs = null;
@@ -240,18 +245,11 @@ export default {
           formData,
           header
         );
-        console.log(rs);
-        this.items = rs.data;
-      } catch (error) {
-        rs = { status: 500 };
-      }
-
-      if (rs.status === 200) {
         this.setAlert("success", "Servidor creado", true);
         this.dialog = false;
-      }
-      if (rs.status != 200) {
-        this.setAlert("error", "Ocurrio un error al crear el servidor", true);
+        this.items = rs.data;
+      } catch (error) {
+        this.manaageError(error);
       }
     },
     handleFilesUpload() {
@@ -270,7 +268,7 @@ export default {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${this.token}`
+          Authorization: `Bearer ${this.token}`
         }
       };
       let rs = null;
@@ -279,19 +277,14 @@ export default {
           `http://localhost/api/servidores/${this.idBorrar}`,
           header
         );
-        this.items = rs.data;
-      } catch (error) {
-        rs = { status: 500 };
-      }
-
-      if (rs.status === 200) {
         this.setAlert("success", "Servidor borrado", true);
         this.dialog = false;
+        this.items = rs.data;
+      } catch (error) {
+        this.manaageError(error);
+      } finally {
+        this.confirmar = false;
       }
-      if (rs.status != 200) {
-        this.setAlert("error", "Ocurrio un error al borrar el servidor", true);
-      }
-      this.confirmar = false;
     },
     toEdit(servidor) {
       this.inputFile = false;
@@ -311,7 +304,7 @@ export default {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${this.token}`
+          Authorization: `Bearer ${this.token}`
         }
       };
       let rs = null;
@@ -321,22 +314,11 @@ export default {
           formData,
           header
         );
-        console.log(rs);
-        this.items = rs.data;
-      } catch (error) {
-        rs = { status: 500 };
-      }
-
-      if (rs.status === 200) {
         this.setAlert("success", "Servidor modificado", true);
         this.dialog = false;
-      }
-      if (rs.status != 200) {
-        this.setAlert(
-          "error",
-          "Ocurrio un error al modificar el servidor",
-          true
-        );
+        this.items = rs.data;
+      } catch (error) {
+        this.manaageError(error);
       }
     },
     toCrear() {
@@ -348,6 +330,14 @@ export default {
     salir() {
       localStorage.removeItem("token");
       this.$router.push({ name: "Login" });
+    },
+    manaageError(error) {
+      if (error.response.status === 401) {
+        this.setAlert("error", "No autenticado", true);
+        this.salir();
+        return;
+      }
+      this.setAlert("error", "Ocurrió un error", true);
     }
   },
   computed: {
