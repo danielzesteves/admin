@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import store from './store'
 import vuetify from './plugins/vuetify';
-import router from './router'
+import router from './router/index'
 import VeeValidate from 'vee-validate';
 Vue.use(VeeValidate);
 Vue.config.productionTip = false

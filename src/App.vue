@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <v-app>
-      <Servidores/>
+        <router-view></router-view>  
     </v-app>
     </div>
 </template>
 <script>
-import Servidores from '@/components/Servidores.vue'
+
 export default {
-    components:{Servidores}
+    components:{}
 }
 </script>
 <style lang="scss">

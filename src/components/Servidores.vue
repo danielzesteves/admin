@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <v-btn depressed small color="primary" class="mb-2" @click="salir">Salir</v-btn>
     <v-data-table
       :headers="headers"
       :items="items"
@@ -347,6 +348,10 @@ export default {
       this.inputFile = true;
       this.dialog = true;
       this.crear = true;
+    },
+    salir(){
+      localStorage.removeItem("token");
+      this.$router.push({ name: 'Login' })
     }
   },
   computed: {

@@ -9,16 +9,15 @@
                 <v-row>
                   <v-col>
                     <v-text-field
-                      v-model="form.user"
+                      v-model="form.email"
                       :counter="10"
                       label="Usuario"
                       :rules="validation.emailRules"
                     ></v-text-field>
                   </v-col>
-
                   <v-col cols="12">
                     <v-text-field
-                      v-model="form.pass"
+                      v-model="form.password"
                       :counter="10"
                       label="Contraseña"
                       required
@@ -64,15 +63,24 @@ export default {
         this.getLogin();
       }
     },
-    getLogin() {
-      axios
-        .get("http://localhost/api/servidores")
-        .then(function(response) {
-          console.log(response);
-        })
-        .catch(function(error) {
+    async getLogin() {
+      localStorage.removeItem("token");
+      const header = {
+        headers: {
+          Accept: "application/json"
+        }
+      };
+      let rs = {};
+      try {
+          rs = await axios.post("http://localhost/api/auth/login",this.form,header)  
+      } catch (error) {
           console.log(error);
-        });
+      }
+      if (rs.status == 200) {
+        console.log(rs);
+        localStorage.setItem("token", rs.data.access_token);
+        this.$router.push({ name: 'Servidores' })
+      }
     }
   }
 };
